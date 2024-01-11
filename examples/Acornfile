@@ -1,0 +1,54 @@
+name:        "Voting Application"
+description: "Acorn running the VotingApp"
+
+labels: {
+	application: "votingapp"
+}
+
+services: nats: {
+	if args.dev {
+		build: {
+			context:   "../"
+			acornfile: "../Acornfile"
+		}
+	} else {
+		image: "ghcr.io/lucj/acorn-nats:v#.#.#-#"
+	}
+}
+
+containers: {
+
+	voteui: {
+		image: "registry.gitlab.com/voting-application/vote-ui:v1.0.13"
+		ports: publish: "80/http"
+		memory: 128Mi
+	}
+
+	vote: {
+		image:  "registry.gitlab.com/voting-application/vote:v1.0.10"
+		consumes: ["nats"]
+		ports:  "5000/http"
+		memory: 128Mi
+		env: {
+			BACKEND:        "nats"
+			NATS_URL: "nats://@{service.nats.secrets.admin.username}:@{service.nats.secrets.admin.password}@nats:4222"
+		}
+	}
+
+	result: {
+		image: "registry.gitlab.com/voting-application/result:v1.0.12"
+		consumes: ["nats"]
+		ports: "5000/http"
+		env: {
+			BACKEND:        "nats"
+			NATS_URL: "nats://@{service.nats.secrets.admin.username}:@{service.nats.secrets.admin.password}@nats:4222"
+		}
+		memory: 128Mi
+	}
+
+	resultui: {
+		image: "registry.gitlab.com/voting-application/result-ui:v1.0.11"
+		ports: publish: "80/http"
+		memory: 128Mi
+	}
+}

@@ -1,0 +1,89 @@
+name:        "NATS Acorn"
+description: "Acorn providing NATS"
+readme:      "./README.md"
+info:        localData.info
+icon:        "./icon.png"
+
+args: {
+	// NATS version
+	version: "2.10.7"
+}
+
+services: broker: {
+	default:   true
+	container: "nats"
+	secrets: ["admin"]
+	ports: "4222"
+}
+
+containers: nats: {
+	name:        "NATS"
+	description: "Container running a NATS server"
+	image:       "nats:\(args.version)"
+	command: ["--config", "/etc/nats.conf"]
+	ports: publish:          "4222/tcp"
+	files: "/etc/nats.conf": "secret://nats-conf/template"
+	probes: [
+		{
+			type:                "readiness"
+			initialDelaySeconds: 5
+			timeoutSeconds:      5
+			tcp: {
+				url: "tcp://localhost:4222"
+			}
+		},
+	]
+}
+
+secrets: {
+	admin: {
+		name: "credentials of the admin user"
+		type: "basic"
+		params: {
+			passwordLength:     10
+			passwordCharacters: "A-Za-z0-9"
+		}
+		data: {
+			username: "admin"
+			password: ""
+		}
+	}
+	"nats-conf": {
+		type: "template"
+		data: {
+			template: """
+				listen: 0.0.0.0:4222
+				authorization {
+					default_permissions = {
+						publish = ">"
+						subscribe = ">"
+					}
+					users = [
+						{ 
+							user: admin 
+							password: "${secret://admin/password}"
+						}
+					]
+				}
+				"""
+		}
+	}
+}
+
+localData: info: """
+	## Usage
+
+	services: db: {
+		image: "ghcr.io/acorn-io/nats:v#.#.#-#"
+	}
+
+	containers: app: {
+		image: "app-image"
+		env: {
+		  HOST: "@{@{service.}db.address}"
+		  PORT: "@{@{service.}db.port.4222}"
+		  ADMIN_USER: "@{@{service.}db.secrets.admin.username}"
+		  ADMIN_PASS: "@{@{service.}db.secrets.admin.password}"
+		}
+	}
+	"""
