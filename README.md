@@ -26,7 +26,7 @@ services: nats: {
 			acornfile: "../Acornfile"
 		}
 	} else {
-		image: "ghcr.io/lucj/acorn-nats:v#.#.#-#"
+		image: "ghcr.io/acorn-io/nats:v#.#.#-#"
 	}
 }
 ```
