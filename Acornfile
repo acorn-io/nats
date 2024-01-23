@@ -5,8 +5,6 @@ info:        localData.info
 icon:        "./icon.png"
 
 args: {
-	// NATS version
-	version: "2.10.7"
 }
 
 services: broker: {
@@ -19,7 +17,7 @@ services: broker: {
 containers: nats: {
 	name:        "NATS"
 	description: "Container running a NATS server"
-	image:       "nats:\(args.version)"
+	image:       "nats:2.10.7"
 	command: ["--config", "/etc/nats.conf"]
 	ports: publish:          "4222/tcp"
 	files: "/etc/nats.conf": "secret://nats-conf/template"
