@@ -1,4 +1,4 @@
-name: Publish Postgres Acorn image
+name: Publish Acorn image
 on:
   push:
     tags:
